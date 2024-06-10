@@ -1,0 +1,67 @@
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  .table th,
+  .table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .table th {
+    background-color: #f4f4f4;
+  }
+  
+  .table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .table tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .table tbody tr td {
+    white-space: nowrap;
+  }
+  
+  .table tbody tr td div {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .table tbody tr td button {
+    padding: 6px 12px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .table tbody tr td button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* 상태별 색상 */
+  .inProgress {
+    background-color: lightblue !important;
+  }
+  
+  .hold {
+    background-color: yellow !important;
+  }
+  
+  .done {
+    background-color: lightgreen !important;
+  }
+  
+  .deleted {
+    background-color: lightcoral !important;
+  }
+  
+  .complete {
+    background-color: lightgray !important;
+  }
+  
