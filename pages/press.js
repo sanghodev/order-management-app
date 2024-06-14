@@ -30,13 +30,13 @@ export default function Press({ socket }) {
       setOrders(
         res.data.data.filter(
           (order) =>
-            (order.designProof ||
-            order.silkprintFilm ||
-            order.embroidery ||
+            (
+            
+            
             order.decal ||
-            order.dtf ||
-            order.medal ||
-            order.trophy) &&
+            order.dtf
+            
+            ) &&
             order.status !== 'Complete'
         )
       );

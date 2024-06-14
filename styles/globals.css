@@ -31,3 +31,32 @@ body {
     text-wrap: balance;
   }
 }
+
+nav {
+  background-color: #333;
+  padding: 1rem;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+}
+
+nav ul li {
+  margin-right: 1rem;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+}
+
+nav ul li.active a {
+  color: yellow;
+}
+
+nav ul li a:hover {
+  text-decoration: underline;
+}

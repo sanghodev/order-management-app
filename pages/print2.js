@@ -30,13 +30,7 @@ export default function Print2({ socket }) {
       setOrders(
         res.data.data.filter(
           (order) =>
-            (order.designProof ||
-            order.silkprintFilm ||
-            order.embroidery ||
-            order.decal ||
-            order.dtf ||
-            order.medal ||
-            order.trophy) &&
+            order.dtf &&
             order.status !== 'Complete'
         )
       );
@@ -44,6 +38,7 @@ export default function Print2({ socket }) {
       console.error('Failed to fetch orders:', error.message);
     }
   };
+
 
   const updateOrderStatus = async (id, newStatus) => {
     try {
@@ -90,7 +85,7 @@ export default function Print2({ socket }) {
       {
         Header: 'DTF',
         accessor: 'dtf',
-        Cell: ({ value }) => (value ? 'Yes' : 'No'),
+        Cell: ({ value }) => value, // 수량 표시
       },
       {
         Header: 'Pickup Date',

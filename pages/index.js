@@ -371,12 +371,12 @@ export default function Home({ socket }) {
           })}
         </tbody>
       </table>
-      <Link href="/status" legacyBehavior>
+      {/* <Link href="/status" legacyBehavior>
         <a>Go to Status Page</a>
       </Link>
       <Link href="/complete" legacyBehavior>
         <a>Go to Complete Page</a>
-      </Link>
+      </Link> */}
     </div>
   );
 }

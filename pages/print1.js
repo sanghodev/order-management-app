@@ -30,13 +30,7 @@ export default function Print1({ socket }) {
       setOrders(
         res.data.data.filter(
           (order) =>
-            (order.designProof ||
-            order.silkprintFilm ||
-            order.embroidery ||
-            order.decal ||
-            order.dtf ||
-            order.medal ||
-            order.trophy) &&
+            (order.silkprintFilm || order.embroidery) &&
             order.status !== 'Complete'
         )
       );
@@ -44,6 +38,7 @@ export default function Print1({ socket }) {
       console.error('Failed to fetch orders:', error.message);
     }
   };
+
 
   const updateOrderStatus = async (id, newStatus) => {
     try {
