@@ -103,7 +103,7 @@ app.prepare().then(() => {
   });
 
   // Handle all other routes with Next.js
-  server.get('*', (req, res) => {
+  server.all('*', (req, res) => {
     return handle(req, res);
   });
 

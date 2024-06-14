@@ -30,13 +30,14 @@ export default function Design({ socket }) {
       setOrders(
         res.data.data.filter(
           (order) =>
-            order.designProof ||
+            (order.designProof ||
             order.silkprintFilm ||
             order.embroidery ||
             order.decal ||
             order.dtf ||
             order.medal ||
-            order.trophy
+            order.trophy) &&
+            order.status !== 'Complete'
         )
       );
     } catch (error) {
@@ -64,11 +65,10 @@ export default function Design({ socket }) {
 
   const completeOrder = async (id) => {
     try {
-      const res = await axios.put(`/api/orders/${id}/complete`);
-      const updatedOrder = res.data.data;
-      setOrders((prevOrders) => prevOrders.filter(order => order._id !== updatedOrder._id));
+      await axios.put(`/api/orders/${id}/complete`);
+      fetchOrders();  // Fetch the latest orders after completing an order
       if (socket) {
-        socket.emit('updateOrder', updatedOrder);
+        socket.emit('orderUpdated', { _id: id, status: 'Complete' });
       }
     } catch (error) {
       console.error('Failed to complete order:', error.message);
