@@ -104,10 +104,9 @@ export default function Print2({ socket }) {
         Cell: ({ row }) => (
           <div>
             <button onClick={() => updateOrderStatus(row.original._id, 'In Progress')}>Start</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
+            {/* <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
             <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Deleted')}>Delete</button>
-            <button onClick={() => completeOrder(row.original._id)}>Complete</button>
+            <button onClick={() => completeOrder(row.original._id)}>Complete</button> */}
           </div>
         ),
       },

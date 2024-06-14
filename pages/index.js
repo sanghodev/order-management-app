@@ -26,7 +26,6 @@ export default function Home({ socket }) {
 
     if (socket) {
       socket.on('orderUpdated', (updatedOrder) => {
-        console.log('Order updated received:', updatedOrder);
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order._id === updatedOrder._id ? updatedOrder : order
@@ -43,7 +42,7 @@ export default function Home({ socket }) {
   const fetchOrders = async () => {
     try {
       const res = await axios.get('/api/orders');
-      setOrders(res.data.data.filter(order => order.status !== 'Complete'));
+      setOrders(res.data.data.filter(order => order.status !== 'Complete' && order.status !== 'Deleted'));
     } catch (error) {
       console.error('Failed to fetch orders:', error.message);
     }
@@ -137,7 +136,6 @@ export default function Home({ socket }) {
           order._id === updatedOrder._id ? updatedOrder : order
         )
       );
-      console.log('Emitting order update:', updatedOrder);
       if (socket) {
         socket.emit('updateOrder', updatedOrder);
       }
@@ -152,7 +150,6 @@ export default function Home({ socket }) {
       const res = await axios.put(`/api/orders/${id}/complete`);
       const updatedOrder = res.data.data;
       setOrders((prevOrders) => prevOrders.filter(order => order._id !== updatedOrder._id));
-      console.log('Emitting order completion:', updatedOrder);
       if (socket) {
         socket.emit('orderUpdated', updatedOrder);
       }
@@ -217,19 +214,7 @@ export default function Home({ socket }) {
         Header: 'Status',
         accessor: 'status',
       },
-      {
-        Header: 'Actions',
-        Cell: ({ row }) => (
-          <div>
-            <button onClick={() => updateOrderStatus(row.original._id, 'In Progress')}>Start</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Deleted')}>Delete</button>
-            <button onClick={() => completeOrder(row.original._id)}>Complete</button>
-            <button onClick={() => handleEdit(row.original)}>Edit</button>
-          </div>
-        ),
-      },
+      
     ],
     []
   );

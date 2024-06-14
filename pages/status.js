@@ -42,7 +42,7 @@ export default function Status({ socket }) {
   const fetchOrders = async () => {
     try {
       const res = await axios.get('/api/orders');
-      setOrders(res.data.data.filter(order => order.status !== 'Complete'));
+      setOrders(res.data.data.filter(order => order.status !== 'Complete' && order.status !== 'Deleted'));
     } catch (error) {
       console.error('Failed to fetch orders:', error.message);
     }
@@ -131,9 +131,9 @@ export default function Status({ socket }) {
       if (socket) {
         socket.emit('orderUpdated', updatedOrder);
       }
+      fetchOrders(); // Fetch orders to update the list after completion
     } catch (error) {
       console.error('Failed to complete order:', error.message);
-      fetchOrders(); // If update fails, re-fetch the orders to reset the state
     }
   };
 
@@ -196,11 +196,10 @@ export default function Status({ socket }) {
         Header: 'Actions',
         Cell: ({ row }) => (
           <div>
-            <button onClick={() => updateOrderStatus(row.original._id, 'In Progress')}>Start</button>
+            {/* <button onClick={() => updateOrderStatus(row.original._id, 'In Progress')}>Start</button>
             <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
             <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Deleted')}>Delete</button>
-            <button onClick={() => completeOrder(row.original._id)}>Complete</button>
+            <button onClick={() => completeOrder(row.original._id)}>Complete</button> */}
             <button onClick={() => handleEdit(row.original)}>Edit</button>
           </div>
         ),

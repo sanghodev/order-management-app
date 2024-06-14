@@ -3,11 +3,15 @@ import axios from 'axios';
 import { useTable, useSortBy } from 'react-table';
 import styles from '../styles/Table.module.css';
 
+
 export default function Complete({ socket }) {
   const [orders, setOrders] = useState([]);
+  const [deletedOrders, setDeletedOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState('complete'); // 'complete' or 'delete'
 
   useEffect(() => {
     fetchCompletedOrders();
+    fetchDeletedOrders();
 
     if (socket) {
       socket.on('orderUpdated', (updatedOrder) => {
@@ -22,8 +26,16 @@ export default function Complete({ socket }) {
         }
       });
 
+      socket.on('orderDeleted', (deletedOrder) => {
+        setDeletedOrders((prevDeletedOrders) => [...prevDeletedOrders, deletedOrder]);
+        setOrders((prevOrders) =>
+          prevOrders.filter((order) => order._id !== deletedOrder._id)
+        );
+      });
+
       return () => {
         socket.off('orderUpdated');
+        socket.off('orderDeleted');
       };
     }
   }, [socket]);
@@ -31,9 +43,18 @@ export default function Complete({ socket }) {
   const fetchCompletedOrders = async () => {
     try {
       const res = await axios.get('/api/orders?status=Complete');
-      setOrders(res.data.data);
+      setOrders(res.data.data || []);
     } catch (error) {
       console.error('Failed to fetch completed orders:', error.message);
+    }
+  };
+
+  const fetchDeletedOrders = async () => {
+    try {
+      const res = await axios.get('/api/orders?status=Deleted');
+      setDeletedOrders(res.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch deleted orders:', error.message);
     }
   };
 
@@ -53,7 +74,24 @@ export default function Complete({ socket }) {
     }
   };
 
+  const deleteOrder = async (id) => {
+    try {
+      const res = await axios.put(`/api/orders/${id}`, { status: 'Deleted' });
+      const deletedOrder = res.data.data;
+      setOrders((prevOrders) =>
+        prevOrders.filter((order) => order._id !== id)
+      );
+      setDeletedOrders((prevDeletedOrders) => [...prevDeletedOrders, deletedOrder]);
+      if (socket) {
+        socket.emit('orderDeleted', deletedOrder);
+      }
+    } catch (error) {
+      console.error('Failed to delete order:', error.message);
+    }
+  };
+
   const data = React.useMemo(() => orders, [orders]);
+  const deletedData = React.useMemo(() => deletedOrders, [deletedOrders]);
 
   const columns = React.useMemo(
     () => [
@@ -116,8 +154,68 @@ export default function Complete({ socket }) {
         Cell: ({ row }) => (
           <div>
             <button onClick={() => rollbackOrder(row.original._id)}>Rollback</button>
+            <button onClick={() => deleteOrder(row.original._id)}>Delete</button>
           </div>
         ),
+      },
+    ],
+    []
+  );
+
+  const deletedColumns = React.useMemo(
+    () => [
+      {
+        Header: 'Sales Rep',
+        accessor: 'salesRep',
+      },
+      {
+        Header: 'Customer Account',
+        accessor: 'customerAccount',
+        sortType: 'alphanumeric',
+      },
+      {
+        Header: 'Design Proof',
+        accessor: 'designProof',
+        Cell: ({ value }) => (value ? 'Yes' : 'No'),
+      },
+      {
+        Header: 'Silkprint Film',
+        accessor: 'silkprintFilm',
+        Cell: ({ value }) => (value ? 'Yes' : 'No'),
+      },
+      {
+        Header: 'Embroidery',
+        accessor: 'embroidery',
+        Cell: ({ value }) => (value ? 'Yes' : 'No'),
+      },
+      {
+        Header: 'Decal',
+        accessor: 'decal',
+      },
+      {
+        Header: 'DTF',
+        accessor: 'dtf',
+      },
+      {
+        Header: 'Medal',
+        accessor: 'medal',
+      },
+      {
+        Header: 'Trophy',
+        accessor: 'trophy',
+      },
+      {
+        Header: 'Pickup Date',
+        accessor: 'pickupDate',
+        sortType: (a, b) => {
+          const dateA = new Date(a.original.pickupDate);
+          const dateB = new Date(b.original.pickupDate);
+          return dateA - dateB;
+        },
+      },
+      {
+        Header: 'Notes',
+        accessor: 'notes',
       },
     ],
     []
@@ -129,12 +227,22 @@ export default function Complete({ socket }) {
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({ columns, data }, useSortBy);
+  } = useTable({ columns, data: data || [] }, useSortBy);
+
+  const {
+    getTableProps: getDeletedTableProps,
+    getTableBodyProps: getDeletedTableBodyProps,
+    headerGroups: deletedHeaderGroups,
+    rows: deletedRows,
+    prepareRow: prepareDeletedRow,
+  } = useTable({ columns: deletedColumns, data: deletedData || [] }, useSortBy);
 
   const getStatusClassName = (status) => {
     switch (status) {
       case 'Complete':
         return styles.complete;
+      case 'Deleted':
+        return styles.deleted;
       default:
         return '';
     }
@@ -143,38 +251,77 @@ export default function Complete({ socket }) {
   return (
     <div>
       <h1>Completed Orders</h1>
-      <table {...getTableProps()} className={styles.table}>
-        <thead>
-          {headerGroups.map(headerGroup => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
-                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  <span>
-                    {column.isSorted
-                      ? column.isSortedDesc
-                        ? ' 🔽'
-                        : ' 🔼'
-                      : ''}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {rows.map(row => {
-            prepareRow(row);
-            return (
-              <tr {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
-                {row.cells.map(cell => (
-                  <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+      <div>
+        <button onClick={() => setActiveTab('complete')}>Complete</button>
+        <button onClick={() => setActiveTab('delete')}>Deleted</button>
+      </div>
+      {activeTab === 'complete' ? (
+        <table {...getTableProps()} className={styles.table}>
+          <thead>
+            {headerGroups.map(headerGroup => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map(column => (
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                    {column.render('Header')}
+                    <span>
+                      {column.isSorted
+                        ? column.isSortedDesc
+                          ? ' 🔽'
+                          : ' 🔼'
+                        : ''}
+                    </span>
+                  </th>
                 ))}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {rows.map(row => {
+              prepareRow(row);
+              return (
+                <tr {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+                  {row.cells.map(cell => (
+                    <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : (
+        <table {...getDeletedTableProps()} className={styles.table}>
+          <thead>
+            {deletedHeaderGroups.map(headerGroup => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map(column => (
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                    {column.render('Header')}
+                    <span>
+                      {column.isSorted
+                        ? column.isSortedDesc
+                          ? ' 🔽'
+                          : ' 🔼'
+                        : ''}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody {...getDeletedTableBodyProps()}>
+            {deletedRows.map(row => {
+              prepareDeletedRow(row);
+              return (
+                <tr {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+                  {row.cells.map(cell => (
+                    <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

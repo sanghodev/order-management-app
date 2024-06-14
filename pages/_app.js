@@ -37,10 +37,10 @@ function MyApp({ Component, pageProps }) {
           </li>
           
           <li className={router.pathname === '/print1' ? 'active' : ''}>
-            <Link href="/print1">Print1</Link>
+            <Link href="/print1">Silk/Embroidery/Decal</Link>
           </li>
           <li className={router.pathname === '/print2' ? 'active' : ''}>
-            <Link href="/print2">Print2</Link>
+            <Link href="/print2">Print - DTF</Link>
           </li>
           <li className={router.pathname === '/press' ? 'active' : ''}>
             <Link href="/press">Press</Link>
