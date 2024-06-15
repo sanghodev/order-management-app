@@ -39,7 +39,6 @@ export default function Print2({ socket }) {
     }
   };
 
-
   const updateOrderStatus = async (id, newStatus) => {
     try {
       const res = await axios.put(`/api/orders/${id}`, { status: newStatus });
@@ -156,7 +155,7 @@ export default function Print2({ socket }) {
             return (
               <tr key={row.id} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
                 {row.cells.map(cell => (
-                  <td key={cell.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  <td key={cell.column.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                 ))}
               </tr>
             );
