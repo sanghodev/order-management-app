@@ -110,8 +110,7 @@ export default function Print2({ socket }) {
           </div>
         ),
       },
-    ],
-    []
+    ]
   );
 
   const {
