@@ -259,7 +259,7 @@ export default function Complete({ socket }) {
         <table {...getTableProps()} className={styles.table}>
           <thead>
             {headerGroups.map(headerGroup => (
-              <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
+              <tr key={`headerGroup-${headerGroupIndex}`} {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
                   <th key={column.id} {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render('Header')}
