@@ -143,9 +143,9 @@ export default function Print2({ socket }) {
       <table {...getTableProps()} className={styles.table}>
         <thead>
           {headerGroups.map(headerGroup => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
+            <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (
-                <th {...column.getHeaderProps()}>{column.render('Header')}</th>
+                <th key={column.id} {...column.getHeaderProps()}>{column.render('Header')}</th>
               ))}
             </tr>
           ))}
@@ -154,9 +154,9 @@ export default function Print2({ socket }) {
           {rows.map(row => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+              <tr key={row.id} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
                 {row.cells.map(cell => (
-                  <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  <td key={cell.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                 ))}
               </tr>
             );
