@@ -261,9 +261,9 @@ export default function Complete({ socket }) {
         <table {...getTableProps()} className={styles.table}>
           <thead>
             {headerGroups.map((headerGroup, headerGroupIndex) => (
-              <tr key={`headerGroup-${headerGroupIndex}`} {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column) => (
-                  <th key={column.id} {...column.getHeaderProps(column.getSortByToggleProps())}>
+              <tr key={headerGroupIndex} {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column, columnIndex) => (
+                  <th key={columnIndex} {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render('Header')}
                     <span>
                       {column.isSorted
@@ -281,9 +281,9 @@ export default function Complete({ socket }) {
             {rows.map((row, rowIndex) => {
               prepareRow(row);
               return (
-                <tr key={`row-${rowIndex}`} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+                <tr key={rowIndex} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
                   {row.cells.map((cell, cellIndex) => (
-                    <td key={`cell-${cellIndex}`} {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                    <td key={cellIndex} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                   ))}
                 </tr>
               );
@@ -294,9 +294,9 @@ export default function Complete({ socket }) {
         <table {...getDeletedTableProps()} className={styles.table}>
           <thead>
             {deletedHeaderGroups.map((headerGroup, headerGroupIndex) => (
-              <tr key={`deletedHeaderGroup-${headerGroupIndex}`} {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column) => (
-                  <th key={column.id} {...column.getHeaderProps(column.getSortByToggleProps())}>
+              <tr key={headerGroupIndex} {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column, columnIndex) => (
+                  <th key={columnIndex} {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render('Header')}
                     <span>
                       {column.isSorted
@@ -314,9 +314,9 @@ export default function Complete({ socket }) {
             {deletedRows.map((row, rowIndex) => {
               prepareDeletedRow(row);
               return (
-                <tr key={`deletedRow-${rowIndex}`} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+                <tr key={rowIndex} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
                   {row.cells.map((cell, cellIndex) => (
-                    <td key={`deletedCell-${cellIndex}`} {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                    <td key={cellIndex} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                   ))}
                 </tr>
               );
