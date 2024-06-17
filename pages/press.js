@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useTable } from 'react-table';
 import styles from '../styles/Table.module.css';
@@ -6,46 +6,42 @@ import styles from '../styles/Table.module.css';
 export default function Press({ socket }) {
   const [orders, setOrders] = useState([]);
 
-  useEffect(() => {
-    fetchOrders();
-
-    if (socket) {
-      socket.on('orderUpdated', (updatedOrder) => {
-        setOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order._id === updatedOrder._id ? updatedOrder : order
-          )
-        );
-      });
-
-      return () => {
-        socket.off('orderUpdated');
-      };
-    }
-  }, [socket]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const res = await axios.get('/api/orders');
       setOrders(
         res.data.data.filter(
           (order) =>
-            (
-            
-            
-            order.decal ||
-            order.dtf
-            
-            ) &&
+            (order.decal || order.dtf) &&
             order.status !== 'Complete'
         )
       );
     } catch (error) {
       console.error('Failed to fetch orders:', error.message);
     }
-  };
+  }, []);
 
-  const updateOrderStatus = async (id, newStatus) => {
+  useEffect(() => {
+    fetchOrders();
+
+    if (socket) {
+      const handleOrderUpdated = (updatedOrder) => {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order._id === updatedOrder._id ? updatedOrder : order
+          )
+        );
+      };
+
+      socket.on('orderUpdated', handleOrderUpdated);
+
+      return () => {
+        socket.off('orderUpdated', handleOrderUpdated);
+      };
+    }
+  }, [socket, fetchOrders]);
+
+  const updateOrderStatus = useCallback(async (id, newStatus) => {
     try {
       const res = await axios.put(`/api/orders/${id}`, { status: newStatus });
       const updatedOrder = res.data.data;
@@ -61,9 +57,9 @@ export default function Press({ socket }) {
       console.error(`Failed to update order status to ${newStatus}:`, error.message);
       fetchOrders();
     }
-  };
+  }, [socket, fetchOrders]);
 
-  const completeOrder = async (id) => {
+  const completeOrder = useCallback(async (id) => {
     try {
       await axios.put(`/api/orders/${id}/complete`);
       fetchOrders();  // Fetch the latest orders after completing an order
@@ -73,7 +69,7 @@ export default function Press({ socket }) {
     } catch (error) {
       console.error('Failed to complete order:', error.message);
     }
-  };
+  }, [socket, fetchOrders]);
 
   const data = React.useMemo(() => orders, [orders]);
 
@@ -113,10 +109,8 @@ export default function Press({ socket }) {
         Header: 'Actions',
         Cell: ({ row }) => (
           <div>
-
             <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
             <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
-
           </div>
         ),
       },
@@ -166,7 +160,7 @@ export default function Press({ socket }) {
             return (
               <tr key={row.id} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
                 {row.cells.map(cell => (
-                  <td key={cell.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  <td key={cell.column.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                 ))}
               </tr>
             );

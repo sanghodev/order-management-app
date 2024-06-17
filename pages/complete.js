@@ -1,20 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useTable, useSortBy } from 'react-table';
 import styles from '../styles/Table.module.css';
-
 
 export default function Complete({ socket }) {
   const [orders, setOrders] = useState([]);
   const [deletedOrders, setDeletedOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('complete'); // 'complete' or 'delete'
 
+  const fetchCompletedOrders = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/orders?status=Complete');
+      setOrders(res.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch completed orders:', error.message);
+    }
+  }, []);
+
+  const fetchDeletedOrders = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/orders?status=Deleted');
+      setDeletedOrders(res.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch deleted orders:', error.message);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCompletedOrders();
     fetchDeletedOrders();
 
     if (socket) {
-      socket.on('orderUpdated', (updatedOrder) => {
+      const handleOrderUpdated = (updatedOrder) => {
         if (updatedOrder.status === 'Complete') {
           setOrders((prevOrders) =>
             prevOrders.map((order) =>
@@ -24,41 +41,26 @@ export default function Complete({ socket }) {
         } else {
           setOrders((prevOrders) => prevOrders.filter((order) => order._id !== updatedOrder._id));
         }
-      });
+      };
 
-      socket.on('orderDeleted', (deletedOrder) => {
+      const handleOrderDeleted = (deletedOrder) => {
         setDeletedOrders((prevDeletedOrders) => [...prevDeletedOrders, deletedOrder]);
         setOrders((prevOrders) =>
           prevOrders.filter((order) => order._id !== deletedOrder._id)
         );
-      });
+      };
+
+      socket.on('orderUpdated', handleOrderUpdated);
+      socket.on('orderDeleted', handleOrderDeleted);
 
       return () => {
-        socket.off('orderUpdated');
-        socket.off('orderDeleted');
+        socket.off('orderUpdated', handleOrderUpdated);
+        socket.off('orderDeleted', handleOrderDeleted);
       };
     }
-  }, [socket]);
+  }, [socket, fetchCompletedOrders, fetchDeletedOrders]);
 
-  const fetchCompletedOrders = async () => {
-    try {
-      const res = await axios.get('/api/orders?status=Complete');
-      setOrders(res.data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch completed orders:', error.message);
-    }
-  };
-
-  const fetchDeletedOrders = async () => {
-    try {
-      const res = await axios.get('/api/orders?status=Deleted');
-      setDeletedOrders(res.data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch deleted orders:', error.message);
-    }
-  };
-
-  const rollbackOrder = async (id) => {
+  const rollbackOrder = useCallback(async (id) => {
     try {
       const res = await axios.put(`/api/orders/${id}/rollback`);
       const updatedOrder = res.data.data;
@@ -72,9 +74,9 @@ export default function Complete({ socket }) {
       console.error('Failed to rollback order:', error.message);
       fetchCompletedOrders(); // If rollback fails, re-fetch the orders to reset the state
     }
-  };
+  }, [socket, fetchCompletedOrders]);
 
-  const deleteOrder = async (id) => {
+  const deleteOrder = useCallback(async (id) => {
     try {
       const res = await axios.put(`/api/orders/${id}`, { status: 'Deleted' });
       const deletedOrder = res.data.data;
@@ -88,7 +90,7 @@ export default function Complete({ socket }) {
     } catch (error) {
       console.error('Failed to delete order:', error.message);
     }
-  };
+  }, [socket]);
 
   const data = React.useMemo(() => orders, [orders]);
   const deletedData = React.useMemo(() => deletedOrders, [deletedOrders]);
@@ -159,7 +161,7 @@ export default function Complete({ socket }) {
         ),
       },
     ],
-    []
+    [rollbackOrder, deleteOrder]
   );
 
   const deletedColumns = React.useMemo(
@@ -218,7 +220,7 @@ export default function Complete({ socket }) {
         accessor: 'notes',
       },
     ],
-    [deleteOrder, rollbackOrder]
+    []
   );
 
   const {
@@ -258,9 +260,9 @@ export default function Complete({ socket }) {
       {activeTab === 'complete' ? (
         <table {...getTableProps()} className={styles.table}>
           <thead>
-            {headerGroups.map(headerGroup => (
+            {headerGroups.map((headerGroup, headerGroupIndex) => (
               <tr key={`headerGroup-${headerGroupIndex}`} {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
+                {headerGroup.headers.map((column) => (
                   <th key={column.id} {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render('Header')}
                     <span>
@@ -276,12 +278,12 @@ export default function Complete({ socket }) {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
+            {rows.map((row, rowIndex) => {
               prepareRow(row);
               return (
-                <tr key={row.id} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
-                  {row.cells.map(cell => (
-                    <td key={cell.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                <tr key={`row-${rowIndex}`} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+                  {row.cells.map((cell, cellIndex) => (
+                    <td key={`cell-${cellIndex}`} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                   ))}
                 </tr>
               );
@@ -291,9 +293,9 @@ export default function Complete({ socket }) {
       ) : (
         <table {...getDeletedTableProps()} className={styles.table}>
           <thead>
-            {deletedHeaderGroups.map(headerGroup => (
-              <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
+            {deletedHeaderGroups.map((headerGroup, headerGroupIndex) => (
+              <tr key={`deletedHeaderGroup-${headerGroupIndex}`} {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column) => (
                   <th key={column.id} {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render('Header')}
                     <span>
@@ -309,12 +311,12 @@ export default function Complete({ socket }) {
             ))}
           </thead>
           <tbody {...getDeletedTableBodyProps()}>
-            {deletedRows.map(row => {
+            {deletedRows.map((row, rowIndex) => {
               prepareDeletedRow(row);
               return (
-                <tr key={row.id} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
-                  {row.cells.map(cell => (
-                    <td key={cell.id} {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                <tr key={`deletedRow-${rowIndex}`} {...row.getRowProps()} className={getStatusClassName(row.original.status)}>
+                  {row.cells.map((cell, cellIndex) => (
+                    <td key={`deletedCell-${cellIndex}`} {...cell.getCellProps()}>{cell.render('Cell')}</td>
                   ))}
                 </tr>
               );
