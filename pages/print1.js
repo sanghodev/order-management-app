@@ -116,7 +116,7 @@ export default function Print1({ socket }) {
         ),
       },
     ],
-    []
+    [updateOrderStatus]
   );
 
   const {

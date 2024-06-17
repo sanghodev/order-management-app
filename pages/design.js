@@ -142,7 +142,7 @@ export default function Design({ socket }) {
         ),
       },
     ],
-    []
+    [updateOrderStatus]
   );
 
   const {

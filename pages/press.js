@@ -121,7 +121,7 @@ export default function Press({ socket }) {
         ),
       },
     ],
-    []
+    [updateOrderStatus]
   );
 
   const {

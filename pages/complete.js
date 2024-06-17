@@ -218,7 +218,7 @@ export default function Complete({ socket }) {
         accessor: 'notes',
       },
     ],
-    []
+    [deleteOrder, rollbackOrder]
   );
 
   const {
