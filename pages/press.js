@@ -110,7 +110,13 @@ export default function Press({ socket }) {
         Cell: ({ row }) => (
           <div>
             <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
-            <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
+            <button
+              onClick={() => updateOrderStatus(row.original._id, 'Done')}
+              disabled={row.original.status !== 'In Progress'}
+              className={row.original.status !== 'In Progress' ? styles.disabledButton : ''}
+            >
+              Done
+            </button>
           </div>
         ),
       },

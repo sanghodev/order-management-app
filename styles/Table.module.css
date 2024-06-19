@@ -64,4 +64,11 @@
   .complete {
     background-color: lightgray !important;
   }
-  
+
+
+.disabledButton {
+  background-color: #ddd; /* Lighter color */
+  cursor: not-allowed;
+  opacity: 0.4;
+  cursor: no-drop !important;
+}
