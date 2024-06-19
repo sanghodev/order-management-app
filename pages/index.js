@@ -3,7 +3,7 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useTable } from 'react-table';
 import styles from '../styles/Table.module.css';
-import socket from '../utils/socket'; // socket.js 파일에서 가져오기
+import socket from '../lib/socket'; // socket.js 파일에서 가져오기
 
 export default function Home() {
   const [orders, setOrders] = useState([]);

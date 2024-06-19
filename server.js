@@ -10,12 +10,17 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || 'your_mongo_uri_here'; // 환경 변수로 설정
+const MONGO_URI = process.env.MONGO_URI; // 환경 변수로 설정
 
 app.prepare().then(() => {
   const server = express();
   const httpServer = http.createServer(server);
-  const io = socketIo(httpServer);
+  const io = socketIo(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
 
   server.use(express.json());
 
