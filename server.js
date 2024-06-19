@@ -10,7 +10,7 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = 'mongodb+srv://mango01:mango781108@cluster0.bgatkqz.mongodb.net/';
+const MONGO_URI = process.env.MONGO_URI || 'your_mongo_uri_here'; // 환경 변수로 설정
 
 app.prepare().then(() => {
   const server = express();

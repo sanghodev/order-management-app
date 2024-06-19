@@ -3,8 +3,9 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useTable } from 'react-table';
 import styles from '../styles/Table.module.css';
+import socket from '../utils/socket'; // socket.js 파일에서 가져오기
 
-export default function Home({ socket }) {
+export default function Home() {
   const [orders, setOrders] = useState([]);
   const [form, setForm] = useState({
     salesRep: '',
@@ -24,20 +25,18 @@ export default function Home({ socket }) {
   useEffect(() => {
     fetchOrders();
 
-    if (socket) {
-      socket.on('orderUpdated', (updatedOrder) => {
-        setOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order._id === updatedOrder._id ? updatedOrder : order
-          )
-        );
-      });
+    socket.on('orderUpdated', (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+    });
 
-      return () => {
-        socket.off('orderUpdated');
-      };
-    }
-  }, [socket]);
+    return () => {
+      socket.off('orderUpdated');
+    };
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -136,9 +135,7 @@ export default function Home({ socket }) {
           order._id === updatedOrder._id ? updatedOrder : order
         )
       );
-      if (socket) {
-        socket.emit('updateOrder', updatedOrder);
-      }
+      socket.emit('updateOrder', updatedOrder);
     } catch (error) {
       console.error(`Failed to update order status to ${newStatus}:`, error.message);
       fetchOrders(); // If update fails, re-fetch the orders to reset the state
@@ -150,9 +147,7 @@ export default function Home({ socket }) {
       const res = await axios.put(`/api/orders/${id}/complete`);
       const updatedOrder = res.data.data;
       setOrders((prevOrders) => prevOrders.filter(order => order._id !== updatedOrder._id));
-      if (socket) {
-        socket.emit('orderUpdated', updatedOrder);
-      }
+      socket.emit('orderUpdated', updatedOrder);
       fetchOrders(); // Fetch orders to update the list after completion
     } catch (error) {
       console.error('Failed to complete order:', error.message);
