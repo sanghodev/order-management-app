@@ -10,7 +10,7 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI; // 환경 변수로 설정
+const MONGODB_URI = process.env.MONGODB_URI; // 환경 변수로 설정
 
 app.prepare().then(() => {
   const server = express();
@@ -25,7 +25,7 @@ app.prepare().then(() => {
   server.use(express.json());
 
   // Connect to MongoDB
-  mongoose.connect(MONGO_URI, {
+  mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   }).then(() => console.log('MongoDB connected'))
