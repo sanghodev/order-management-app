@@ -238,7 +238,7 @@ export default function Home() {
   };
 
   return (
-    <div className="container">
+    <div className="">
       <h1>Order Management</h1>
       <form onSubmit={handleSubmit}>
         <input

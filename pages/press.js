@@ -13,7 +13,8 @@ export default function Press({ socket }) {
         res.data.data.filter(
           (order) =>
             (order.decal || order.dtf) &&
-            order.status !== 'Complete'
+            order.status !== 'Complete' &&
+            order.status !== 'Deleted'
         )
       );
     } catch (error) {
@@ -33,10 +34,16 @@ export default function Press({ socket }) {
         );
       };
 
+      const handleOrderCompleted = (completedOrder) => {
+        setOrders((prevOrders) => prevOrders.filter(order => order._id !== completedOrder._id));
+      };
+
       socket.on('orderUpdated', handleOrderUpdated);
+      socket.on('orderCompleted', handleOrderCompleted);
 
       return () => {
         socket.off('orderUpdated', handleOrderUpdated);
+        socket.off('orderCompleted', handleOrderCompleted);
       };
     }
   }, [socket, fetchOrders]);
@@ -61,10 +68,11 @@ export default function Press({ socket }) {
 
   const completeOrder = useCallback(async (id) => {
     try {
-      await axios.put(`/api/orders/${id}/complete`);
-      fetchOrders();  // Fetch the latest orders after completing an order
+      const res = await axios.put(`/api/orders/${id}/complete`);
+      const updatedOrder = res.data.data;
+      setOrders((prevOrders) => prevOrders.filter(order => order._id !== updatedOrder._id));
       if (socket) {
-        socket.emit('orderUpdated', { _id: id, status: 'Complete' });
+        socket.emit('orderCompleted', updatedOrder);
       }
     } catch (error) {
       console.error('Failed to complete order:', error.message);
@@ -117,11 +125,12 @@ export default function Press({ socket }) {
             >
               Done
             </button>
+            {/* <button onClick={() => completeOrder(row.original._id)}>Complete</button> */}
           </div>
         ),
       },
     ],
-    [updateOrderStatus]
+    [updateOrderStatus, completeOrder]
   );
 
   const {

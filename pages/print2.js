@@ -13,7 +13,8 @@ export default function Print2({ socket }) {
         res.data.data.filter(
           (order) =>
             order.dtf &&
-            order.status !== 'Complete'
+            order.status !== 'Complete' &&
+            order.status !== 'Deleted'
         )
       );
     } catch (error) {
@@ -33,10 +34,16 @@ export default function Print2({ socket }) {
         );
       };
 
+      const handleOrderCompleted = (completedOrder) => {
+        setOrders((prevOrders) => prevOrders.filter(order => order._id !== completedOrder._id));
+      };
+
       socket.on('orderUpdated', handleOrderUpdated);
+      socket.on('orderCompleted', handleOrderCompleted);
 
       return () => {
         socket.off('orderUpdated', handleOrderUpdated);
+        socket.off('orderCompleted', handleOrderCompleted);
       };
     }
   }, [socket]);
@@ -51,7 +58,7 @@ export default function Print2({ socket }) {
         )
       );
       if (socket) {
-        socket.emit('updateOrder', updatedOrder);
+        socket.emit('orderUpdated', updatedOrder);
       }
     } catch (error) {
       console.error(`Failed to update order status to ${newStatus}:`, error.message);
@@ -61,10 +68,11 @@ export default function Print2({ socket }) {
 
   const completeOrder = useCallback(async (id) => {
     try {
-      await axios.put(`/api/orders/${id}/complete`);
-      fetchOrders(); // Fetch the latest orders after completing an order
+      const res = await axios.put(`/api/orders/${id}/complete`);
+      const updatedOrder = res.data.data;
+      setOrders((prevOrders) => prevOrders.filter(order => order._id !== updatedOrder._id));
       if (socket) {
-        socket.emit('orderUpdated', { _id: id, status: 'Complete' });
+        socket.emit('orderCompleted', updatedOrder);
       }
     } catch (error) {
       console.error('Failed to complete order:', error.message);
@@ -105,14 +113,14 @@ export default function Print2({ socket }) {
         Cell: ({ row }) => (
           <div>
             <button onClick={() => updateOrderStatus(row.original._id, 'In Progress')}>Start</button>
-            {/* <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button> */}
-            <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
-            {/* <button onClick={() => completeOrder(row.original._id)}>Complete</button> */}
-         </div>
+            <button onClick={() => updateOrderStatus(row.original._id, 'Hold')}>Hold</button>
+            {/* <button onClick={() => updateOrderStatus(row.original._id, 'Done')}>Done</button>
+            <button onClick={() => completeOrder(row.original._id)}>Complete</button> */}
+          </div>
         ),
       },
     ],
-    [updateOrderStatus]
+    [updateOrderStatus, completeOrder]
   );
 
   const {
